@@ -3,6 +3,8 @@ from googlemaps.convert import decode_polyline
 from datetime import datetime
 from config import Config
 import json
+from math import ceil
+from pprint import pprint
 
 
 class Car(object):
@@ -52,11 +54,22 @@ waypoints = legs[0]["steps"]
 gas_used_for_waypoints = []
 
 for waypoint in waypoints:
-    # print "Waypoint: {}".format(waypoint)
+    print "Waypoint: {}".format(waypoint)
     miles_for_leg = meters_to_miles(waypoint["distance"]["value"])
     gas_used = calculate_gas_used(miles_for_leg, Car)
-    Car.fill_level = round(Car.fill_level - (gas_used/Car.tank_capacity), 3)
+    Car.fill_level = round(Car.fill_level - (gas_used / Car.tank_capacity), 3)
     print "{} miles, {} gallons ({} gallons left)".format(miles_for_leg, gas_used, Car.tank_capacity * Car.fill_level)
     gas_used_for_waypoints.append(gas_used)
 
+sampling_size = 100
+long_path = googlemaps.convert.decode_polyline(waypoints[6]["polyline"]["points"])
+
+if len(long_path) > sampling_size:
+    long_path = [long_path[int(ceil(i * float(len(long_path)) / sampling_size))] for i in range(sampling_size)]
+
 print "Total gas used: {} gallons".format(sum(gas_used_for_waypoints))
+
+# pprint()
+road_fit = gmaps.snap_to_roads(long_path, interpolate=True)
+
+pprint(road_fit)
